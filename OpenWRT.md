@@ -1,0 +1,114 @@
+# OpenWRT Setup Instructions
+
+## Step 1: Basic Setups
+- Login to router's admin interface. Make sure there is an internet connection, typically via an ethernet cable.
+- Set a new admin password. If there are subnet conflict, also set a different subnet by editing the second to last integer in the gateway ip address.
+- Update the router's firmware by downloading the latest stable release from the manufacture's website. [Example](https://dl.gl-inet.com/?model=ax1800)
+- Depending on the firmware, you may need to set the admin password etc. again.
+- Go to advanced, and install luci if it's not already installed.
+
+## Step 2: Add Luci iptables TTL Rule
+- Login to luci using the samd admin password as root.
+- Go to Network > Firewall > Custom Rules.
+- Add the following line at the end:
+```iptables -t mangle -I POSTROUTING -o usb0 -j TTL --ttl-set 65```
+
+## Step 3: Prepare Linux Environment
+- SSH into the router with ```ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedKeyTypes=+ssh-rsa root@192.168.8.1``` and the same admin password. Note that the router's IP address may be different.
+- Install the following useful packages:
+    ```
+    opkg update
+    opkg install usbutils openssh-sftp-server
+    ```
+
+## Step 4: Install easytether Driver
+Refer to [this guide](https://docs.gl-inet.com/en/3/tutorials/tether/)
+- Find the chipset information on the router's website. [Example](https://www.gl-inet.com/products/gl-ax1800/#specs)
+- Go to easytether's [driver download page](http://www.mobile-stream.com/easytether/drivers.html) and locate the right driver. Typically, use the tiny driver. [Example](http://www.mobile-stream.com/beta/openwrt/easytether-usb-tiny_0.8.9-5_openwrt-19.07.3.zip)
+- Unzip the driver and find the correct chipset folder. Using SCP and transfer the correct driver into the router, such as:
+    ```scp ~/Downloads/19.07.3/ipq40xx/generic/easytether-usb-tiny_0.8.9-5_arm_cortex-a7_neon-vfpv4.ipk root@192.168.10.1:/tmp/```
+- SSH into the router and install the driver like so: ```opkg install /tmp/easytether-usb-tiny_0.8.9-5_arm_cortex-a7_neon-vfpv4.ipk```
+- Add an adbkey as follows:
+    ```
+    mkdir -p /etc/easytether &&
+    openssl genpkey -algorithm rsa -pkeyopt rsa_keygen_bits:2048 -out /etc/easytether/adbkey &&
+    chown root:root /etc/easytether/adbkey &&
+    chmod 600 /etc/easytether/adbkey
+    ```
+- Edit /etc/config/network, and make sure the relevant sections contain the correct options:
+  - config interface 'wan' should contain:
+    ```
+    option proto 'dhcp'
+    option ifname 'tap-easytether'
+    ```
+  - config interface 'tethering'
+    ```
+    option proto 'dhcp'
+    option ifname 'usb0'kuhhncirfhdrgdieuifdutknvedvckrb
+    option metric '30'
+    option disabled '0'
+    ```
+  - config interface 'easytether'
+    ```
+    option proto 'dhcp'
+    option metric '30'
+    option ifname 'tap-easytether'
+    ```
+- Edit /etc/config/firewall, and find the zone config containing ```option name 'wan'```, modify the ```option network``` line by adding ```easytether``` to the end like:
+    ```
+    option network 'wan wan6 wwan easytether'
+    ```
+
+## Step 5: Phone connection
+- Make sure to use an Android phone that has been rooted. Install the easytether pro app and go through with the tutorial.
+- In Android Settings > Developer Options, make sure that USB debugging is enabled. Default USB mode should be file transfer (MTP). Also, turn off the USB debugging timeout.
+- Connect the phone to the router using a USB cable. If prompted, select always allow USB debugging from the device.
+- SSH in to the router again. Verify that easytether-usb works: ```easytehter-usb```. You should see a log saying it's CONNECTED.
+- Verify that the easytether app shows "Connection Established".
+
+## Step 6: Optimizations
+We need to create a few scripts to help us monitor and automate the tethering process.
+- First, a quick script to reset the USB interface. Create ```/etc/config/resettether```:
+  ```
+  usbreset "Pixel 6a" || usbreset SAMSUNG_android
+  ```
+  Note that it should contain all cellphone models that you are expected to tether with. To find the proper product name, use:
+  ```
+  lsusb -v | grep iProduct
+  ```
+- Next, add a script to automatically reconnect to tether at ```/etc/config/easytether```:
+  ```
+  for i in $(seq 1 20);
+  do
+      if (ip a s tap-easytether up); then
+          :
+      else
+          sh /etc/config/resettether && easytether-usb
+      fi
+      sleep 3
+  done
+  ```
+- Add a script to detect downage at ```/etc/config/watchdog```:
+  ```
+  . /lib/functions/network.sh
+  network_flush_cache
+  network_find_wan NET_IF
+  network_get_gateway NET_GW "${NET_IF}"
+
+  for i in $(seq 1 5);
+  do
+      if ping -c 1 -w 3 "${NET_GW}" &> /dev/null
+      then exit 0
+      fi
+  done
+
+  sh /etc/config/resettether
+  ```
+- Finally, use ```crontab -e``` to edit the cron jobs:
+  ```
+  * * * * * sh /etc/config/easytether
+  * * * * * sh /etc/config/watchdog
+  0 4 * * * reboot -f
+  ```
+
+## Congratulations, you have completed the setup for easytether.
