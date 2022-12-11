@@ -34,7 +34,7 @@
 - Restart the firewall: ```/etc/init.d/firewall restart```
 
 ## Step 3: Prepare Linux Environment
-- SSH into the router with ```ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedKeyTypes=+ssh-rsa root@192.168.8.1``` and the same admin password. Note that the router's IP address may be different.
+- SSH into the router with ```ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedKeyTypes=+ssh-rsa root@192.168.8.1``` (or 192.168.1.1 if you are doing OpenWRT 22.03) and the same admin password. Note that the router's IP address may be different.
 - Install the following useful packages:
     ```
     opkg update
