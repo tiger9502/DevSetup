@@ -7,18 +7,38 @@
 - Depending on the firmware, you may need to set the admin password etc. again.
 - Go to advanced, and install luci if it's not already installed.
 
+## Step 1A: OpenWRT 22.03
+- In luci, there is an option to upgrade the firmware with OpenWRT versions. You may find the images on OpenWRT's official site, for example [here](https://openwrt.org/toh/gl.inet/gl-b1300#upgrading_openwrt).
+- Once flashed, you will need to connect to 192.168.1.1 via an ethernet connection. Set an admin password in System -> Administration.
+- Go to Network -> Wireless. Enable all wireless interfaces, set SSID and wifi password (recommended security: WPA2-PSK). Note that you should set different SSIDs for 2.4G and 5G networks.
+
 ## Step 2: Add Luci iptables TTL Rule
+- Skip this step if you flashed OpenWRT 22.03 in Step 1A. Follow Step 2A instead.
 - Login to luci using the samd admin password as root.
 - Go to Network > Firewall > Custom Rules.
 - Add the following line at the end:
 ```iptables -t mangle -I POSTROUTING -o usb0 -j TTL --ttl-set 65```
+
+## Step 2A: OpenWRT 22.03
+- SSH into the router with ```ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedKeyTypes=+ssh-rsa root@192.168.1.1``` and the admin password.
+- Create file ```/etc/config/firewall.user```:
+  ```
+  nft add rule inet fw4 mangle_forward oifname usb0 ip ttl set 65
+  ```
+- Modify ```/etc/config/firewall```, and add the following:
+  ```
+  config include
+    option path '/etc/config/firewall.user'
+    option fw4_compatible '1'
+  ```
+- Restart the firewall: ```/etc/init.d/firewall restart```
 
 ## Step 3: Prepare Linux Environment
 - SSH into the router with ```ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedKeyTypes=+ssh-rsa root@192.168.8.1``` and the same admin password. Note that the router's IP address may be different.
 - Install the following useful packages:
     ```
     opkg update
-    opkg install usbutils openssh-sftp-server
+    opkg install usbutils openssh-sftp-server openssl-util kmod-usb-net-rndis kmod-usb-storage
     ```
 
 ## Step 4: Install easytether Driver
@@ -36,30 +56,28 @@ Refer to [this guide](https://docs.gl-inet.com/en/3/tutorials/tether/)
     chmod 600 /etc/easytether/adbkey
     ```
 - Edit /etc/config/network, and make sure the relevant sections contain the correct options:
-  - config interface 'wan' should contain:
+  - config interface 'wan' and 'wan6' should contain:
     ```
     option proto 'dhcp'
     option ifname 'tap-easytether'
     ```
-  - config interface 'tethering'
+  - create an interface 'easytether':
     ```
-    option proto 'dhcp'
-    option ifname 'usb0'kuhhncirfhdrgdieuifdutknvedvckrb
-    option metric '30'
-    option disabled '0'
-    ```
-  - config interface 'easytether'
-    ```
-    option proto 'dhcp'
-    option metric '30'
-    option ifname 'tap-easytether'
+    config interface easytether
+        option proto 'dhcp'
+        option metric '30'
+        option ifname 'tap-easytether'
     ```
 - Edit /etc/config/firewall, and find the zone config containing ```option name 'wan'```, modify the ```option network``` line by adding ```easytether``` to the end like:
     ```
     option network 'wan wan6 wwan easytether'
     ```
+  If it's OpenWRT 22.03, you may see ```list network 'wan'``` and so on. Add an additional line:
+    ```
+    list network 'easytether'
+    ```
 
-## Step 5: Phone connection
+## Step 5: Phone Connection
 - Make sure to use an Android phone that has been rooted. Install the easytether pro app and go through with the tutorial.
 - In Android Settings > Developer Options, make sure that USB debugging is enabled. Default USB mode should be file transfer (MTP). Also, turn off the USB debugging timeout.
 - Connect the phone to the router using a USB cable. If prompted, select always allow USB debugging from the device.
