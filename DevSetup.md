@@ -24,6 +24,8 @@ xcode-select --install
 https://code.visualstudio.com/download
 ```
 
+Launch VSCode, press SHIFT+COMMAND+P and select "install 'code' command in PATH"
+
 ### Golang
 Find the instruction here: ```https://go.dev/doc/install```
 
