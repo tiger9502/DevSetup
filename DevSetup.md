@@ -95,5 +95,6 @@ Host github.com
   UseKeychain yes
   IdentityFile ~/.ssh/id_ed25519
 ```
+Note:  Omit the "UseKeychain" line if ssh key was not generated with a passphrase.
 
 Now you should be able to autenticate into your github repos.
