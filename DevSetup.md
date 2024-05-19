@@ -2,6 +2,12 @@
 
 The following is a step by step guide on how to setup a fresh computer for common development work.
 
+## iTerm
+For a better terminal experience, install iTerm:
+```
+https://iterm2.com/downloads.html
+```
+
 ## MacOS
 Before start, make sure XCode is installed together with CLT:
 ```
@@ -30,7 +36,7 @@ brew install nvm && brew install npm
 If pytorch is required, check the python3 version supported by the latest pytorch version.
 As of this writing, the latest supported version is 3.11.
 ```
-brew install python@3.11 && pip install --user pipenv
+brew install python@3.11 && pip3 install --user pipenv
 python3 -m pip install --upgrade pip
 ```
 
@@ -65,3 +71,27 @@ docker pull redis
 ```
 brew install git
 ```
+To make sure git works correctly, first we generate a ssh keys (replace the email to a desired address):
+```
+ssh-keygen -t ed25519 -C "******@gmail.com"
+```
+
+Go to ```https://github.com/settings/keys``` and add a new ssh key. Paste the content of the following file that was just generated:
+```
+more ~/.ssh/id_ed25519.pub
+```
+
+And finally, add the ssh key to the ssh config:
+```
+touch ~/.ssh/config
+```
+
+Add the entry:
+```
+Host github.com
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentityFile ~/.ssh/id_ed25519
+```
+
+Now you should be able to autenticate into your github repos.
