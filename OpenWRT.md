@@ -45,14 +45,13 @@ Note most of the setup steps are based on GL-iNet B1300 Model.
     opkg update
     opkg install usbutils openssh-sftp-server openssl-util kmod-usb-net-rndis kmod-usb-storage
     ```
-- Remove the Client Wifi Network. Restore the LAN IPv4 Address to 192.168.1.1.
 
 ## Step 4: Install easytether Driver
 Refer to [this guide](https://docs.gl-inet.com/en/3/tutorials/tether/)
 - Find the chipset information on the router's website. [Example](https://www.gl-inet.com/products/gl-b1300/). For B1300, the chipset is arm_cortex-a7_neon-vfpv4.
 - Go to easytether's [driver download page](http://www.mobile-stream.com/easytether/drivers.html) and locate the right driver. Typically, use the tiny driver. [Example](http://www.mobile-stream.com/beta/openwrt/easytether-usb-tiny_0.8.9-5_openwrt-19.07.3.zip)
 - Unzip the driver and find the correct chipset folder. Using SCP and transfer the correct driver into the router, such as:
-    ```scp ~/Downloads/19.07.3/ipq40xx/generic/easytether-usb-tiny_0.8.9-5_arm_cortex-a7_neon-vfpv4.ipk root@192.168.10.1:/tmp/```
+    ```scp ~/Downloads/19.07.3/ipq40xx/generic/easytether-usb-tiny_0.8.9-5_arm_cortex-a7_neon-vfpv4.ipk root@192.168.2.1:/tmp/```
 - SSH into the router and install the driver like so: ```opkg install /tmp/easytether-usb-tiny_0.8.9-5_arm_cortex-a7_neon-vfpv4.ipk```
 - Add an adbkey as follows:
     ```
@@ -74,14 +73,15 @@ Refer to [this guide](https://docs.gl-inet.com/en/3/tutorials/tether/)
         option metric '30'
         option ifname 'tap-easytether'
     ```
-- Edit /etc/config/firewall, and find the zone config containing ```option name 'wan'```, modify the ```option network``` line by adding ```easytether``` to the end like:
+- (deprecated) Edit /etc/config/firewall, and find the zone config containing ```option name 'wan'```, modify the ```option network``` line by adding ```easytether``` to the end like:
     ```
     option network 'wan wan6 wwan easytether'
     ```
-  If it's OpenWRT 22.03, you may see ```list network 'wan'``` and so on. Add an additional line:
+  If it's OpenWRT 25.03, you may see ```list network 'wan'``` and so on. Add an additional line:
     ```
     list network 'easytether'
     ```
+- To make your life easier later, remove the Client Wifi Network. Restore the LAN IPv4 Address to 192.168.1.1.
 
 ## Step 5: Phone Connection
 - Make sure to use an Android phone that has been rooted. Install the easytether pro app and go through with the tutorial.
