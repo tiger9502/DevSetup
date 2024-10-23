@@ -94,7 +94,15 @@ Refer to [this guide](https://docs.gl-inet.com/en/3/tutorials/tether/)
 We need to create a few scripts to help us monitor and automate the tethering process.
 - First, a quick script to reset the USB interface. Create ```/etc/config/resettether```:
   ```
-  usbreset "Pixel 6a" || usbreset SAMSUNG_android
+  for i in $(seq 1 60);
+  do
+      if (usbreset "Pixel 6a" || usbreset SAMSUNG_android || usbreset 001/002)
+      then exit 0
+      fi
+      sleep 5
+  done
+
+  reboot -f
   ```
   Note that it should contain all cellphone models that you are expected to tether with. To find the proper product name, use:
   ```
@@ -132,7 +140,7 @@ We need to create a few scripts to help us monitor and automate the tethering pr
   ```
   * * * * * sh /etc/config/easytether
   * * * * * sh /etc/config/watchdog
-  0 4 * * * reboot -f
+  0 10 * * * reboot -f
   ```
 
 ## Congratulations, you have completed the setup for easytether.
