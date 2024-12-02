@@ -18,7 +18,6 @@ Using another macbook with Configurator 2, download and restore the operating sy
 
 ### Step 3:
 Boot into Recovery mode again. Open terminal and perform the following:
-- Disable SIP with ```csrutil disable```
 - Activate the root user:
     ```dscl -f /Volumes/Data/private/var/db/dslocal/nodes/Default localhost -passwd /Local/Default/Users/root```
 - When prompted, create a root user password.
@@ -31,5 +30,32 @@ Boot into Recovery mode again. Open terminal and perform the following:
 - When asked for permissions, use the root account and password entered before. Create a new user and set as administrator.
 - Turn off the Mac by long pressing the power button.
 
+### Step 5:
+- Boot into Recovery again.
+- Disable SIP with ```csrutil disable```, using the credential of the newly created admin user.
+- Execute the following commands in sequence (ignore if files not found):
+    ```
+    rm /var/db/ConfigurationProfiles/Settings/.cloudConfigHasActivationRecord
+    rm /var/db/ConfigurationProfiles/Settings/.cloudConfigRecordFound
+    touch /var/db/ConfigurationProfiles/Settings/.cloudConfigProfileInstalled
+    touch /var/db/ConfigurationProfiles/Settings/.cloudConfigRecordNotFound
+    launchctl disable system/com.apple.ManagedClient.enroll
+    ```
+- Make sure we also block the urls for enrollment in the host file by:
+    ```
+    echo "0.0.0.0 iprofiles.apple.com" >> /etc/hosts
+    echo "0.0.0.0 mdmenrollment.apple.com" >> /etc/hosts
+    echo "0.0.0.0 deviceenrollment.apple.com" >> /etc/hosts
+    echo "0.0.0.0 gdmf.apple.com" >> /etc/hosts
+    ```
+- Bypass the MacOS Setup:
+    ```
+    touch /Volumes/Data/private/var/db/.AppleSetupDone
+    ```
+- Reboot, and login normally as the admin user. Now we can verify enrollment is off inside Terminal:
+    ```profiles status -type enrollment```
+  We should see that the DEP/MDM status is off. Finally turn off root access: ```dsenableroot -d```
 
+
+## Android 14
 
