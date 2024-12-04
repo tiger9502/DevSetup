@@ -2,13 +2,13 @@
 
 The following is a step by step guide on how to setup a fresh computer for common development work.
 
-## iTerm
+
+## MacOS
 For a better terminal experience, install iTerm:
 ```
 https://iterm2.com/downloads.html
 ```
 
-## MacOS
 Before start, make sure XCode is installed together with CLT:
 ```
 xcode-select --install
@@ -98,3 +98,16 @@ Host github.com
 Note:  Omit the "UseKeychain" line if ssh key was not generated with a passphrase.
 
 Now you should be able to autenticate into your github repos.
+
+
+# Windows
+
+## Links for setups
+- [VSCode](https://code.visualstudio.com/download)
+- [Golang](https://go.dev/doc/install)
+- [NodeJS](https://nodejs.org/en/download/package-manager/current) Use the fnm option.
+- [Python](https://www.python.org/downloads/windows/) For pytorch, use 3.11
+- [Docker](https://www.docker.com/products/docker-desktop/)
+- [Git](https://desktop.github.com/download/)
+- Unreal Engine
+- Rider
