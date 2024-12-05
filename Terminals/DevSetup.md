@@ -99,6 +99,12 @@ Note:  Omit the "UseKeychain" line if ssh key was not generated with a passphras
 
 Now you should be able to autenticate into your github repos.
 
+Finally make sure to set a desired git author:
+```
+git config --global user.name "***** **"
+git config --global user.email "*********@users.noreply.github.com"
+```
+
 
 # Windows
 
