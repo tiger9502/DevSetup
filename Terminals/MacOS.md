@@ -1,4 +1,4 @@
-# Developer Setups
+# MacOS Developer Setups
 
 The following is a step by step guide on how to setup a fresh computer for common development work.
 
@@ -104,16 +104,3 @@ Finally make sure to set a desired git author:
 git config --global user.name "***** **"
 git config --global user.email "*********@users.noreply.github.com"
 ```
-
-
-# Windows
-
-## Links for setups
-- [VSCode](https://code.visualstudio.com/download)
-- [Golang](https://go.dev/doc/install)
-- [NodeJS](https://nodejs.org/en/download/package-manager/current) Use the fnm option.
-- [Python](https://www.python.org/downloads/windows/) For pytorch, use 3.11
-- [Docker](https://www.docker.com/products/docker-desktop/)
-- [Git](https://desktop.github.com/download/)
-- Unreal Engine
-- Rider

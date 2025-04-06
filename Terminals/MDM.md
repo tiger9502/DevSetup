@@ -57,5 +57,12 @@ Boot into Recovery mode again. Open terminal and perform the following:
   We should see that the DEP/MDM status is off. Finally turn off root access: ```dsenableroot -d```
 
 
-## Android 14
+## Android 14 (Samsung)
 
+[link](intent://com.sec.android.app.samsungapps/#Intent;scheme=android-app;end) to open Samsung Galaxy Store
+[link](intent://com.android.settings/#intent;scheme=android-app;end) to open Android Settings
+[link](intent://com.google.android.gsf.login.LoginActivity/#Intent;scheme=android-app;end)
+[link](https://galaxy.store/setting)
+
+QuickShortcutMaker app
+App Launcher app
