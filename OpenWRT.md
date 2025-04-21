@@ -3,8 +3,10 @@
 Note most of the setup steps are based on ~~GL-iNet B1300 Model~~. Updated: GL-iNet AX1800.
 Note that the setup guide assumes that we will end up with the subnet starting at 192.168.1.1.
 
-## Step 1: OpenWRT 23.05
+## Step 1: Firmware
 - In luci, there is an option to upgrade the firmware with OpenWRT versions. You may find the images on OpenWRT's official site, for example [here](https://openwrt.org/toh/gl.inet/gl-b1300#upgrading_openwrt).
+> [!NOTE]
+> For AX1800, OpenWRT version 21.02 works (Firmware version 4.6.8). Newer firmware does not work as of May 2025.
 - Once flashed, you will need to connect to 192.168.1.1 via an ethernet connection. Set an admin password in System -> Administration. (Note: for different models the default gateway may be different; it is 192.168.8.1 for AX1800)
 - Go to Network -> Wireless. Enable all wireless interfaces, set SSID and wifi password (recommended security: WPA2-PSK). Note that you should set different SSIDs for 2.4G and 5G networks.
 
@@ -15,8 +17,10 @@ Note that the setup guide assumes that we will end up with the subnet starting a
 - ~~Depending on the firmware, you may need to set the admin password etc. again.~~
 - ~~Go to advanced, and install luci if it's not already installed.~~
 
-## Step 2: OpenWRT 23.05
+## Step 2: OpenWRT
 - SSH into the router with ```ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedKeyTypes=+ssh-rsa root@192.168.1.1``` and the admin password.
+> [!NOTE]
+> For AX1800, the following steps should be skipped. Proceed to Step 3.
 - Create file ```/etc/config/firewall.user```:
   ```
   nft add rule inet fw4 mangle_forward oifname usb0 ip ttl set 65
@@ -39,12 +43,12 @@ Note that the setup guide assumes that we will end up with the subnet starting a
 ## Step 3: Prepare Linux Environment
 - You may need to connect the router to a wifi network to get access to the internet. Refer to [this instruction](https://openwrt.org/docs/guide-user/network/wifi/connect_client_wifi).
 - If the router gateway is 192.168.1.1, first go to Network > Interfaces > LAN and set IPv4 Address temporarily to 192.168.2.1. Save, and re-login to OpenWRT using 192.168.2.1.
-- In Network > Wireless, Click Scan on the 5G Radio (in B1300's case it's Qualcomm Atheros IPQ4019 802.11ac/n) and select the Wifi network; enter the password/key and save and apply.
-- SSH into the router with ```ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedKeyTypes=+ssh-rsa root@192.168.2.1``` and the same admin password. Note that the router's IP address may be different.
+- In Network > Wireless, Click Scan on any radio and select the Wifi network; enter the password/key and save and apply. Make sure the mode of the interface is set to Client; you may need to disable the other radio. Note, modern phones usually only allow tethering via the 5G radio (802.11ac/n).
+- SSH into the router with ```ssh -o HostKeyAlgorithms=+ssh-rsa root@192.168.2.1``` and the same admin password. Note that the router's IP address may be different.
 - Install the following useful packages:
     ```
     opkg update
-    opkg install usbutils openssh-sftp-server openssl-util kmod-usb-net-rndis kmod-usb-storage
+    opkg install openssh-sftp-server openssl-util kmod-usb-net-rndis kmod-usb-storage
     ```
 
 ## Step 4: Install easytether Driver
@@ -60,6 +64,7 @@ Refer to [this guide](https://docs.gl-inet.com/en/3/tutorials/tether/)
     bsdtar -zxf easytether-usb-tiny_0.8.9-5_arm_cortex-a9.ipk
     bsdtar -zxf data.tar.gz -C /
     ```
+  If the bsdtar package is no longer available, manually download and unzip the package and transfer data.tar.gz to the router via SCP. Run the last command with tar instead of bsdtar.
 - ~~Unzip the driver and find the correct chipset folder. Using SCP and transfer the correct driver into the router, such as:~~
     ~~```scp ~/Downloads/19.07.3/ipq40xx/generic/easytether-usb-tiny_0.8.9-5_arm_cortex-a7_neon-vfpv4.ipk root@192.168.2.1:/tmp/```~~
 - ~~SSH into the router and install the driver like so:~~
@@ -72,7 +77,7 @@ Refer to [this guide](https://docs.gl-inet.com/en/3/tutorials/tether/)
     chmod 600 /etc/easytether/adbkey
     ```
 - Edit /etc/config/network, and make sure the relevant sections contain the correct options:
-  - config interface 'wan' and 'wan6' should contain:
+  - config interface 'wan' and 'wan6' should contain (proto may be'dhcpv6' for wan6):
     ```
     option proto 'dhcp'
     option ifname 'tap-easytether'
@@ -101,7 +106,13 @@ Refer to [this guide](https://docs.gl-inet.com/en/3/tutorials/tether/)
 
 ## Step 6: Optimizations
 We need to create a few scripts to help us monitor and automate the tethering process.
-- First, a quick script to reset the USB interface. Create ```/etc/config/resettether```:
+- (Deprecated) First, a quick script to reset the USB interface.
+
+  >[!NOTE]
+  >The package usbutils may no longer be available. Alternatives are WIP.
+
+  Make sure we have the required package installed: ```opkg install usbutils```
+  Create ```/etc/config/resettether```:
   ```
   for i in $(seq 1 60);
   do
@@ -113,7 +124,7 @@ We need to create a few scripts to help us monitor and automate the tethering pr
 
   reboot -f
   ```
-  Note that it should contain all cellphone models that you are expected to tether with. To find the proper product name, use:
+  ~~Note that it should contain all cellphone models that you are expected to tether with. To find the proper product name, use:~~
   ```
   lsusb -v | grep iProduct
   ```
@@ -149,8 +160,10 @@ We need to create a few scripts to help us monitor and automate the tethering pr
   ```
   * * * * * sh /etc/config/easytether
   * * * * * sh /etc/config/watchdog
-  0 10 * * * reboot -f
+  0 6 * * * reboot -f
   ```
+  The reboot line does a reboot everyday at 6am. You may want to change or exclude this.
+
 
 ## Additional Note
 - If at any time the radio networks in wireless section need to be recreated, make sure to use mode "Access Point" and network "lan".
