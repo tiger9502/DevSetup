@@ -4,15 +4,11 @@ set -e
 
 echo "Creating /etc/config/resettether..."
 cat > /etc/config/resettether << 'EOF'
-for i in $(seq 1 60);
-do
-    if (usbreset "Pixel 6a" || usbreset 001/002)
-    then exit 0
-    fi
-    sleep 5
-done
-
-reboot -f
+if pgrep -f "easytether-usb" > /dev/null 2>&1; then
+    kill $(pgrep -f "easytether-usb" | grep -v $$)
+fi
+sleep 5
+easytether-usb
 EOF
 
 chmod +x /etc/config/resettether
@@ -24,9 +20,9 @@ do
     if (ip a s tap-easytether up); then
         :
     else
-        sh /etc/config/resettether && easytether-usb
+        sh /etc/config/resettether
     fi
-    sleep 3
+    sleep 5
 done
 EOF
 
@@ -39,12 +35,11 @@ network_flush_cache
 network_find_wan NET_IF
 network_get_gateway NET_GW "${NET_IF}"
 
-for i in $(seq 1 5);
-do
-    if ping -c 1 -w 3 "${NET_GW}" &> /dev/null
-    then exit 0
+if ping -c 1 -w 3 "${NET_GW}" &> /dev/null; then
+    if curl -s --head --connect-timeout 5 "https://github.com" > /dev/null 2>&1; then
+        exit 0
     fi
-done
+fi
 
 sh /etc/config/resettether
 EOF
@@ -52,8 +47,9 @@ EOF
 chmod +x /etc/config/watchdog
 
 echo "Configuring cron jobs..."
-crontab -l 2>/dev/null | grep -v "easytether" | grep -v "watchdog" > /tmp/crontab.tmp || true
+crontab -l 2>/dev/null | grep -v "easytether" | grep -v "watchdog" | grep -v "reboot -f" > /tmp/crontab.tmp || true
 cat >> /tmp/crontab.tmp << 'EOF'
+0 6 */15 * * reboot -f
 * * * * * sh /etc/config/easytether
 * * * * * sh /etc/config/watchdog
 EOF
