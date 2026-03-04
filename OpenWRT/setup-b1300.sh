@@ -11,8 +11,7 @@ opkg install unzip openssh-sftp-server openssl-util kmod-usb-net-rndis kmod-usb-
 echo "Downloading and installing easytether driver..."
 wget http://www.mobile-stream.com/beta/openwrt/easytether-usb-tiny_0.8.9-5_openwrt-19.07.3.zip
 unzip easytether-usb-tiny_0.8.9-5_openwrt-19.07.3.zip
-tar -zxf 19.07.3/bcm53xx/generic/easytether-usb-tiny_0.8.9-5_arm_cortex-a9.ipk
-tar -zxf data.tar.gz -C /
+opkg install 19.07.3/ipq40xx/generic/easytether-usb-tiny_0.8.9-5_arm_cortex-a7_neon-vfpv4.ipk
 rm -rf 19.07.3/
 
 echo "Creating adbkey..."
@@ -36,7 +35,7 @@ fi
 
 if grep -q "^config interface 'wan6'" /etc/config/network; then
     sed -i '/^config interface.*'"'"'wan6'"'"'$/,/^$/{ /option proto/d; /option ifname/d; }' /etc/config/network
-    sed -i '/^config interface.*'"'"'wan6'"'"'$/a\    option proto '"'"'dhcp'"'"'\n    option ifname '"'"'tap-easytether'"'"'' /etc/config/network
+    sed -i '/^config interface.*'"'"'wan6'"'"'$/a\    option proto '"'"'dhcpv6'"'"'\n    option ifname '"'"'tap-easytether'"'"'' /etc/config/network
 fi
 
 if ! grep -q "^config interface 'easytether'" /etc/config/network; then
